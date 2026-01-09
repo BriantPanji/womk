@@ -1,0 +1,350 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================
+// USER & AKSES
+// =========================
+model User {
+  id              String   @id @default(cuid(2))
+  fullName        String   @db.VarChar(128)
+  username        String   @unique @db.VarChar(64)
+  email           String   @unique @db.VarChar(255)
+  password        String   
+  profilePhoto    String?  @db.VarChar(255)
+  whatsapp        String?  @db.VarChar(15)
+  instagram       String?  @db.VarChar(44)
+
+  lingkunganId    String  
+  statusAccountId String
+
+  lingkungan      Lingkungan    @relation(fields: [lingkunganId], references: [id])
+  statusAccount   StatusAccount @relation(fields: [statusAccountId], references: [id])
+
+  roles           UserRole[]
+  jabatan         UserJabatan[]
+  articles        Article[]
+  // eventsCreated   Event[]        @relation("EventCreator")
+  // eventParticipants EventParticipant[]
+  forums          Forum[]
+  forumComments   ForumComment[]
+  forumVotes      ForumVote[]
+  galleryPublic   GalleryPublic[]
+  // donations       Donation[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("users")
+  galleries Gallery[]
+}
+
+// =========================
+// ROLE & STATUS
+// =========================
+model Role {
+  id    String @id @default(cuid(2))
+  name  String @unique
+
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String
+  roleId String
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model StatusAccount {
+  id    String @id @default(cuid(2))
+  name  String @unique
+
+  users User[]
+
+  @@map("status_accounts")
+}
+
+// =========================
+// STRUKTUR GEREJA
+// =========================
+model Wilayah {
+  id   String @id @default(cuid(2))
+  name String @db.VarChar(255)
+  number Int
+
+  lingkungan Lingkungan[]
+
+  @@map("wilayah")
+}
+
+model Lingkungan {
+  id        String @id @default(cuid(2))
+  name      String @db.VarChar(255)
+  number    Int
+
+  wilayahId String
+
+  wilayah   Wilayah @relation(fields: [wilayahId], references: [id])
+
+  users     User[]
+
+  @@map("lingkungan")
+}
+
+// =========================
+// JABATAN GEREJAWI
+// =========================
+model Jabatan {
+  id   String @id @default(cuid(2))
+  name String @unique
+
+  users UserJabatan[]
+
+  @@map("jabatan")
+}
+
+model UserJabatan {
+  userId     String
+  jabatanId  String
+  startDate  DateTime
+  endDate    DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jabatan Jabatan @relation(fields: [jabatanId], references: [id])
+
+  @@id([userId, jabatanId, startDate])
+  @@map("user_jabatan")
+}
+
+// =========================
+// ARTIKEL & KONTEN
+// =========================
+model Category {
+  id    String @id @default(cuid(2))
+  name  String @unique
+
+  articles Article[]
+
+  @@map("categories")
+}
+
+model Article {
+  id            String   @id @default(cuid(2))
+  title         String    @db.VarChar(2048)
+  content       String
+
+  images ArticleImage[]
+  status        ArticleStatus
+
+  authorId      String
+  categoryId    String
+
+  author        User     @relation(fields: [authorId], references: [id])
+  category      Category @relation(fields: [categoryId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("articles")
+}
+
+enum ArticleStatus {
+  draft
+  pending
+  published
+}
+
+model ArticleImage {
+  id        String @id @default(cuid(2))
+  articleId String
+  url       String @db.VarChar(512)
+
+  article Article @relation(fields: [articleId], references: [id])
+
+  @@map("article_images")
+}
+
+// =========================
+// EVENT & KEGIATAN
+// =========================
+// model Event {
+//   id          String   @id @default(cuid(2))
+//   title       String
+//   description String
+//   location    String
+//   startTime   DateTime
+//   endTime     DateTime
+
+//   createdById String
+//   createdBy   User @relation("EventCreator", fields: [createdById], references: [id])
+
+//   participants EventParticipant[]
+
+//   @@map("events")
+//   galleryEvents GalleryEvent[]
+// }
+
+// model EventParticipant {
+//   eventId String
+//   userId  String
+//   status  EventParticipantStatus
+
+//   event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+//   user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+//   @@id([eventId, userId])
+//   @@map("event_participants")
+// }
+
+// enum EventParticipantStatus {
+//   hadir
+//   tidak_hadir
+//   pending
+// }
+
+// =========================
+// FORUM BEBAS
+// =========================
+model ForumCategory {
+  id    String @id @default(cuid(2))
+  name  String @unique
+
+  forums Forum[]
+
+  @@map("forum_categories")
+}
+
+model Forum {
+  id         String      @id @default(cuid(2))
+  title      String      @db.VarChar(2048)
+  content    String
+  status     ForumStatus
+
+  authorId   String
+  categoryId String
+
+  author     User          @relation(fields: [authorId], references: [id])
+  category   ForumCategory @relation(fields: [categoryId], references: [id])
+
+  comments   ForumComment[]
+  votes      ForumVote[]
+
+  createdAt  DateTime @default(now())
+
+  @@map("forums")
+}
+
+model ForumComment {
+  id        String   @id @default(cuid(2))
+  forumId   String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  forum     Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("forum_comments")
+}
+
+model ForumVote {
+  forumId String
+  userId  String
+
+  forum   Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, userId])
+  @@map("forum_votes")
+}
+
+enum ForumStatus {
+  pending
+  approved
+  rejected
+}
+
+// =========================
+// GALERI
+// =========================
+// model GalleryEvent {
+//   id        String @id @default(cuid(2))
+//   eventId   String
+//   imagePath String
+//   caption   String?
+
+//   // event     Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+//   @@map("gallery_events")
+// }
+
+model Gallery {
+  id      String @id @default(cuid(2))
+  userId  String
+  imagePath String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gallery")
+}
+
+model GalleryPublic {
+  id        String   @id @default(cuid(2))
+  userId    String
+  imagePath String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gallery_public")
+}
+
+// =========================
+// DONASI
+// =========================
+// model Donation {
+//   id         String   @id @default(cuid(2))
+//   userId     String
+//   amount     Decimal
+//   method     DonationMethod
+//   proofImage String?
+//   status     DonationStatus
+//   createdAt  DateTime @default(now())
+
+//   user       User @relation(fields: [userId], references: [id])
+
+//   @@map("donations")
+// }
+
+// enum DonationMethod {
+//   transfer
+//   qris
+// }
+
+// enum DonationStatus {
+//   pending
+//   confirmed
+//   rejected
+// }
