@@ -10,7 +10,7 @@ export async function seedUser(count: number, maxLingkungan: number, maxStatusAc
 	const statusAccounts = await prisma.statusAccount.findMany({ select: { id: true } });
 
 	if (lingkungans.length === 0 || statusAccounts.length === 0) {
-		console.warn("Lingkungan or StatusAccount missing. Seeding users might fail if relations are required.");
+		throw new Error("Lingkungan or StatusAccount missing. Seeding users might fail if relations are required.");
 	}
 
 	for (let i = 0; i < count; i++) {

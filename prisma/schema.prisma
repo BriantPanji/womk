@@ -114,9 +114,24 @@ model Lingkungan {
 // =========================
 // JABATAN GEREJAWI
 // =========================
+model KelompokJabatan {
+  id String @id @default(cuid(2))
+  name String @unique
+  desc String
+
+  jabatan Jabatan[]
+
+  @@map("kelompok_jabatan")
+}
+
 model Jabatan {
   id   String @id @default(cuid(2))
   name String @unique
+  desc String
+
+  kelompokJabatanId String
+
+  kelompokJabatan KelompokJabatan @relation(fields: [kelompokJabatanId], references: [id])
 
   users UserJabatan[]
 
