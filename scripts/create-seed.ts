@@ -25,7 +25,7 @@ import { faker } from "@faker-js/faker";
 const prisma = new PrismaClient();
 
 export async function seed${seedName}(count: number) {
-    console.log("Seeding ${seedName}...")
+    console.log("Seeding ${seedName}...");
     
 }
 

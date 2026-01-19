@@ -1,20 +1,19 @@
-import seedLingkungan from "./seeds/lingkungan.seed";
-import seedRole from "./seeds/role.seed";
-import seedStatusAccount from "./seeds/statusAccount.seed";
-import seedUser from "./seeds/user.seed";
-import seedUserRole from "./seeds/userRole.seed";
-import seedWilayah from "./seeds/wilayah.seed";
+import Seed from "./seeds";
+
 
 
 async function main() {
     console.log("Seeding dimulai...")
-
-    await seedWilayah(7);
-    await seedLingkungan(28);
-    await seedStatusAccount();
-    await seedRole(3);
-    await seedUser(10, 28, 4);
-    await seedUserRole();
+    
+    await Seed.wilayah(7);
+    await Seed.lingkungan(28);
+    await Seed.statusAccount();
+    await Seed.role(3);
+    await Seed.user(10, 28, 4);
+    await Seed.userRole();
+    await Seed.kelompokJabatan();
+    await Seed.jabatan();
+    await Seed.userJabatan();
 }
 
 main()
